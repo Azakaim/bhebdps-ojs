@@ -114,3 +114,53 @@ describe('Домашнее задание к лекции «Классы в Java
     });
   })
 });
+describe('Проверка состояния изданий и работы библиотеки', function () {
+  it('ограничивает состояние и не восстанавливает уничтоженное издание', function () {
+    const book = new PrintEditionItem('Издание', 2020, 100);
+    book.state = -10;
+    expect(book.state).toBe(0);
+    book.fix();
+    expect(book.state).toBe(0);
+    book.state = 120;
+    expect(book.state).toBe(100);
+  });
+
+  it('принимает издания только в состоянии больше 30', function () {
+    const library = new Library('Тестовая библиотека');
+    const book = new Book('Автор', 'Название', 2020, 100);
+    book.state = 30;
+    library.addBook(book);
+    expect(library.books.length).toBe(0);
+    book.state = 31;
+    library.addBook(book);
+    expect(library.books[0]).toBe(book);
+  });
+
+  it('выдаёт, ремонтирует и принимает книгу обратно', function () {
+    const library = new Library('Районная библиотека');
+    const novel = new NovelBook('Сомерсет Моэм', 'Луна и грош', 1919, 320);
+    const magazine = new Magazine('Наука и жизнь', 2020, 128);
+    const fantastic = new FantasticBook('Герберт Уэллс', 'Машина времени', 1895, 138);
+    library.addBook(novel);
+    library.addBook(magazine);
+    library.addBook(fantastic);
+
+    expect(library.findBookBy('releaseDate', 1919)).toBe(novel);
+    const issued = library.giveBookByName('Луна и грош');
+    expect(issued).toBe(novel);
+    expect(library.findBookBy('name', 'Луна и грош')).toBe(null);
+    expect(library.books.length).toBe(2);
+
+    issued.state = 25;
+    library.addBook(issued);
+    expect(library.books.length).toBe(2);
+    issued.fix();
+    expect(issued.state).toBe(37.5);
+    library.addBook(issued);
+    expect(library.books.length).toBe(3);
+    expect(library.findBookBy('name', 'Луна и грош')).toBe(novel);
+
+    expect(library.giveBookByName('Несуществующая книга')).toBe(null);
+    expect(library.books.length).toBe(3);
+  });
+});
